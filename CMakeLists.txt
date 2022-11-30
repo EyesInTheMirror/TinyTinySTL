@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
-project(stlstudy)
+project(TinyTinySTL)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(stlstudy main.cpp allocator.h)
+add_executable(TinyTinySTL test.cpp allocator.h tests/test_allocator.h)
