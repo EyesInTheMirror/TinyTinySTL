@@ -13,6 +13,7 @@
 #include <iostream>
 
 namespace tinystl {
+    //allocate()负责内存配置的操作
     template<typename T>
     inline T *_allocate(ptrdiff_t size, T *) {
         std::set_new_handler(nullptr);//放弃异常处理，分配失败时抛出bad_alloc异常
@@ -24,17 +25,17 @@ namespace tinystl {
         }
         return tmp;
     }
-
+    //deallocate()负责内存释放
     template<typename T>
     inline void _deallocate(T *buffer) {
         ::operator delete(buffer);
     }
-
+    //construct()负责对象的构造
     template<typename T1, typename T2>
     inline void _construct(T1 *p, const T2 &value) {
         new(p) T1(value); //在指针p指向的内存空间创建一个T1类型的对象
     }
-
+    //destroy()负责对象的析构
     template<typename T>
     inline void _destroy(T *ptr) {
         ptr->~T();
