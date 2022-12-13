@@ -3,4 +3,4 @@ project(TinyTinySTL)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(TinyTinySTL test.cpp allocator.h tests/test_allocator.h)
+add_executable(TinyTinySTL test.cpp)
