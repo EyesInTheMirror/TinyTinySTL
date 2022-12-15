@@ -7,6 +7,7 @@
 //construct.h做两件事，construct和destroy，也就是对象的构造和析构
 #include <new>
 #include <type_traits>
+#include <utility>
 
 namespace tinystl{
     //construct()所做的是在ptr所指的空间上构造一个T类型的对象
@@ -18,6 +19,11 @@ namespace tinystl{
     template <typename T1, typename T2>
     void construct(T1* ptr, T2& val){
         new((void*)ptr) T1(val);
+    }
+
+    template <typename T1, typename... T2>
+    void construct(T1* ptr, T2&&... args){
+        new((void*)ptr) T1(std::forward<T2>(args)...);
     }
 
     //destroy()所做的是将指定位置的对象析构
