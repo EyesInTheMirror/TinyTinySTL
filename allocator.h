@@ -7,10 +7,7 @@
 #define TINYTINYSTL_ALLOCATOR_H
 
 #include <new>
-#include <cstddef>
-#include <cstdlib>
-#include <climits>
-#include <iostream>
+#include "construct.h"
 
 
 namespace tinystl {
@@ -67,6 +64,36 @@ namespace tinystl {
         ::operator delete(ptr);
     }
 
+    template<typename T>
+    void allocator<T>::construct(pointer ptr) {
+        tinystl::construct(ptr);
+    }
+
+    template<typename T>
+    void allocator<T>::construct(pointer ptr, const_reference val) {
+        tinystl::construct(ptr, val);
+    }
+
+    template<typename T>
+    void allocator<T>::construct(pointer ptr, T &&value) {
+        tinystl::construct(ptr, std::move(value));
+    }
+
+    template<typename T>
+    template<typename... T2>
+    void allocator<T>::construct(pointer ptr, T2 &&... args) {
+        tinystl::construct(ptr, std::forward<T2>(args)...);
+    }
+
+    template<typename T>
+    void allocator<T>::destroy(pointer ptr) {
+        tinystl::destroy(ptr);
+    }
+
+    template<typename T>
+    void allocator<T>::destroy(pointer first, pointer last) {
+        tinystl::destroy(first, last);
+    }
 }
 
 #endif //TINYTINYSTL_ALLOCATOR_H
