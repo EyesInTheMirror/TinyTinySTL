@@ -7,13 +7,20 @@
 
 #include "../allocator.h"
 #include <vector>
+#include <iostream>
+#include <array>
 
 namespace tinystl::test::allocator_test {
     void test_allocator() {
-        int ia[5] = {0, 1, 2, 3, 4};
+        std::array<int, 5> ia = {0, 1, 2, 3, 4};
 
-        std::vector<int, tinystl::allocator<int>> iv(ia, ia + 5);
+        std::vector<int, tinystl::allocator<int>> iv(ia.begin(), ia.end());
         for (auto i: iv) {
+            std::cout << i << ' ';
+        }
+        std::cout << std::endl;
+        std::vector<int, tinystl::allocator<int>> iv2(10, 5);
+        for (auto i: iv2) {
             std::cout << i << ' ';
         }
         std::cout << std::endl;
