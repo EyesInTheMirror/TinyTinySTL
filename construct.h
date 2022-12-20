@@ -8,22 +8,24 @@
 #include <new>
 #include <type_traits>
 #include <utility>
+//暂时需要，提取迭代器类型用
+#include <iterator>
 
 namespace tinystl{
     //construct()所做的是在ptr所指的空间上构造一个T类型的对象
     template <typename T>
     void construct(T* ptr){
-        new((void*)ptr) T();
+        ::new((void*)ptr) T();
     }
 
     template <typename T1, typename T2>
     void construct(T1* ptr, T2& val){
-        new((void*)ptr) T1(val);
+        ::new((void*)ptr) T1(val);
     }
 
     template <typename T1, typename... T2>
     void construct(T1* ptr, T2&&... args){
-        new((void*)ptr) T1(std::forward<T2>(args)...);
+        ::new((void*)ptr) T1(std::forward<T2>(args)...);
     }
 
     //destroy()所做的是将指定位置的对象析构
@@ -53,10 +55,10 @@ namespace tinystl{
         destroy_one(ptr, std::is_trivially_destructible<T>{});
     }
 
-    //还没写到迭代器部分不知道怎么萃取迭代器所指的类型，所以先用T占位
-    template <typename ForwardIter, typename T>
+    //萃取迭代器的类型
+    template <typename ForwardIter>
     void destroy(ForwardIter first, ForwardIter last){
-        destroy_more(first, last, std::is_trivially_destructible<T>{});
+        destroy_more(first, last, std::is_trivially_destructible<std::iterator_traits<ForwardIter>>{});
     }
 
 }
