@@ -12,14 +12,16 @@
 
 namespace tinystl::test::allocator_test {
     void test_allocator() {
-        std::array<int, 5> ia = {0, 1, 2, 3, 4};
+        const int arr_len = 5;
+        std::array<int, arr_len> ia = {0, 1, 2, 3, 4};
 
         std::vector<int, tinystl::allocator<int>> iv(ia.begin(), ia.end());
         for (auto i: iv) {
             std::cout << i << ' ';
         }
         std::cout << std::endl;
-        std::vector<int, tinystl::allocator<int>> iv2(10, 5);
+        const int iv_size = 10, iv_val = 5;
+        std::vector<int, tinystl::allocator<int>> iv2(iv_size, iv_val);
         for (auto i: iv2) {
             std::cout << i << ' ';
         }

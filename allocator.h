@@ -15,30 +15,27 @@ namespace tinystl {
     class allocator {
     public:
         using value_type = T;
-        using pointer = T *;
-        using const_pointer = const T *;
-        using reference = T &;
-        using const_reference = const T &;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
 
     public:
         //与类的实例无关的成员函数，声明为静态成员函数
-        static pointer allocate();
-        static pointer allocate(size_type n);
+        static T* allocate();
 
-        static void deallocate(pointer ptr);
-        static void deallocate(pointer ptr, size_type n);
+        static T* allocate(size_type n);
 
-        static void construct(pointer ptr);
-        static void construct(pointer ptr, const_reference val);
-        static void construct(pointer ptr, T&& value);
+        static void deallocate(T* ptr);
+        static void deallocate(T* ptr, size_type n);
+
+        static void construct(T* ptr);
+        static void construct(T* ptr, const T& val);
+        static void construct(T* ptr, T&& value);
 
         template<typename ... T2>
-        static void construct(pointer ptr, T2&&... args);
+        static void construct(T* ptr, T2&&... args);
 
-        static void destroy(pointer ptr);
-        static void destroy(pointer first, pointer last);
+        static void destroy(T* ptr);
+        static void destroy(T* first, T* last);
     };
 
     template<typename T>
@@ -53,45 +50,45 @@ namespace tinystl {
     }
 
     template<typename T>
-    void allocator<T>::deallocate(pointer ptr) {
+    void allocator<T>::deallocate(T* ptr) {
         if(ptr == nullptr) return;
         ::operator delete(ptr);
     }
 
     template<typename T>
-    void allocator<T>::deallocate(pointer ptr, size_type n) {
+    void allocator<T>::deallocate(T* ptr, size_type n) {
         if(ptr == nullptr) return;
         ::operator delete(ptr);
     }
 
     template<typename T>
-    void allocator<T>::construct(pointer ptr) {
+    void allocator<T>::construct(T* ptr) {
         tinystl::construct(ptr);
     }
 
     template<typename T>
-    void allocator<T>::construct(pointer ptr, const_reference val) {
+    void allocator<T>::construct(T* ptr, const T& val) {
         tinystl::construct(ptr, val);
     }
 
     template<typename T>
-    void allocator<T>::construct(pointer ptr, T &&value) {
+    void allocator<T>::construct(T* ptr, T &&value) {
         tinystl::construct(ptr, std::move(value));
     }
 
     template<typename T>
     template<typename... T2>
-    void allocator<T>::construct(pointer ptr, T2 &&... args) {
+    void allocator<T>::construct(T* ptr, T2 &&... args) {
         tinystl::construct(ptr, std::forward<T2>(args)...);
     }
 
     template<typename T>
-    void allocator<T>::destroy(pointer ptr) {
+    void allocator<T>::destroy(T* ptr) {
         tinystl::destroy(ptr);
     }
 
     template<typename T>
-    void allocator<T>::destroy(pointer first, pointer last) {
+    void allocator<T>::destroy(T* first, T* last) {
         tinystl::destroy(first, last);
     }
 }

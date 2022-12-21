@@ -58,7 +58,8 @@ namespace tinystl{
     //萃取迭代器的类型
     template <typename ForwardIter>
     void destroy(ForwardIter first, ForwardIter last){
-        destroy_more(first, last, std::is_trivially_destructible<std::iterator_traits<ForwardIter>>{});
+        destroy_more(first, last, std::is_trivially_destructible<
+                typename std::iterator_traits<ForwardIter>::value_type>{});
     }
 
 }
