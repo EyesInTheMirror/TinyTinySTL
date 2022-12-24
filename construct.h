@@ -8,8 +8,7 @@
 #include <new>
 #include <type_traits>
 #include <utility>
-//暂时需要，提取迭代器类型用
-#include <iterator>
+#include "iterator.h"
 
 namespace tinystl{
     //construct()所做的是在ptr所指的空间上构造一个T类型的对象
@@ -59,7 +58,7 @@ namespace tinystl{
     template <typename ForwardIter>
     void destroy(ForwardIter first, ForwardIter last){
         destroy_more(first, last, std::is_trivially_destructible<
-                typename std::iterator_traits<ForwardIter>::value_type>{});
+                typename tinystl::iterator_traits<ForwardIter>::value_type>());
     }
 
 }
