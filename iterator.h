@@ -42,6 +42,7 @@ namespace tinystl{
         using reference = T&;
         using difference_type = ptrdiff_t;
     };
+
     template <typename T>
     struct iterator_traits<const T*>{
         using iterator_category = random_access_iterator_tag;
@@ -51,7 +52,7 @@ namespace tinystl{
         using difference_type = ptrdiff_t;
     };
 
-    //萃取迭代器的各种信息，生成一个临时对象，传给需要的算法，触发重载机制
+    //萃取迭代器的各种信息，生成一个临时对象，触发函数的参数推导，利用重载机制提高某些算法的效率
     template <typename Iterator>
     typename iterator_traits<Iterator>::iterator_category
     iterator_category(const Iterator&){
