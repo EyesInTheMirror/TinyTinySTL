@@ -4,7 +4,7 @@
 
 #ifndef TINYTINYSTL_VECTOR_H
 #define TINYTINYSTL_VECTOR_H
-#include "allocator.h"
+#include "memory.h"
 #include "iterator.h"
 #include <cstddef>
 //暂时用std::copy()
@@ -27,7 +27,7 @@ protected:
     iterator _finish;
     iterator _end_of_storage;
 
-    //还没学到这个函数，但是盲猜是要做一个搬家扩容
+    //还没学到这个函数，但是盲猜是要做一个搬家扩容（猜错了，是插入的辅助函数，空间不足时才搬家扩容）
     void insert_aux(iterator position, const T &x);
 
     void deallocate() {
@@ -36,6 +36,7 @@ protected:
         }
     }
 
+    //用于构造函数
     void fill_initialize(size_type n, const T& value) {
         _start = allocate_and_fill(n, value);
         _finish = _start + n;
@@ -45,8 +46,7 @@ protected:
     iterator allocate_and_fill(size_type n, const T& val) {
         //申请一片内存空间，并返回起始地址
         iterator start = data_allocator::allocate(n);
-        //暂时用一下
-        std::uninitialized_fill_n(start, n, val);
+        tinystl::uninitialized_fill_n(start, n, val);
         return start;
     }
 
@@ -56,15 +56,15 @@ public:
 
     iterator end() { return _finish; }
 
-    size_type size() const { return static_cast<size_type>(_finish - _start); }
+    [[nodiscard]] size_type size() const { return static_cast<size_type>(_finish - _start); }
 
-    size_type capacity() const { return static_cast<size_type>(_end_of_storage - _start); }
+    [[nodiscard]] size_type capacity() const { return static_cast<size_type>(_end_of_storage - _start); }
 
     bool empty() { return begin() == end(); }
 
     reference front() { return *_start; }
 
-    reference back() { return *_finish - 1; }
+    reference back() { return *(_finish - 1); }
 
     reference operator[](size_type n) { return *(begin() + n); }
 
@@ -77,7 +77,7 @@ public:
 
     vector(size_type n, const T &value) { fill_initialize(n, value); }
 
-    //why?
+    //为什么要特地把int和long拎出来
     vector(int n, const T &value) { fill_initialize(n, value); }
 
     vector(long n, const T &value) { fill_initialize(n, value); }
@@ -117,9 +117,12 @@ public:
     }
 
     //记得定义
-    iterator erase(iterator first, iterator last);
+    iterator erase(iterator first, iterator last) {
+
+    }
 
     void clear() { erase(begin(), end());}
+
     void resize(size_type new_size, const T& val) {
         if(new_size < size())
             erase(begin() + new_size, end());
