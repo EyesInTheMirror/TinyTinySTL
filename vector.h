@@ -27,7 +27,7 @@ protected:
     iterator _finish;
     iterator _end_of_storage;
 
-    //还没学到这个函数，但是盲猜是要做一个搬家扩容（猜错了，是插入的辅助函数，空间不足时才搬家扩容）
+    //插入的辅助函数，空间不足时搬家扩容
     void insert_aux(iterator position, const T &x);
 
     void deallocate() {
@@ -116,9 +116,12 @@ public:
         return pos;
     }
 
-    //记得定义
+    //先放一下
     iterator erase(iterator first, iterator last) {
-
+        std::copy(last + 1, _finish, first);
+        _finish -= last - first + 1;
+        data_allocator::destroy(_finish, _finish + last - first);
+        return first;
     }
 
     void clear() { erase(begin(), end());}
@@ -135,6 +138,51 @@ public:
         resize(new_size, T());
     }
 };
+
+    template<typename T, typename Alloc>
+    void vector<T, Alloc>::insert_aux(vector::iterator position, const T &x) {
+        if(_finish != _end_of_storage) {//这函数不只给push_back用，这里还得判断
+            //在最后一个元素的后一个位置构造一个最后元素
+            tinystl::construct(_finish, *(_finish - 1));
+            ++_finish;
+            //太他妈细节了，必须要确保存储下来的是元素的一个副本,不然以后修改容器里面的值影响容器外面岂不是乱套
+            T x_copy = x;
+            //position后面整体右移
+            std::copy_backward(position, _finish - 2, _finish - 1);
+            *position = x_copy;
+        }
+        else {
+            const size_type old_size = size();
+            //如果原空间为0，新空间为1，否则为两倍的原空间
+            //注意这里的新空间指的是分配的内存，跟size()没关系
+            const size_type len = old_size != 0 ? 2 * old_size : 1;
+            iterator new_start = data_allocator::allocate(len);
+            iterator new_finish = new_start;
+            try {
+                //别忘了uninitialized系列主打的是构造与内存分配的分离～
+                //首先把插入位置之前的对象拷贝到新位置去
+                new_finish = std::uninitialized_copy(_start, position, new_start);
+                //构造插入对象
+                tinystl::construct(new_finish, x);
+                ++new_finish;
+                //继续把插入位置后面的拷贝到新位置去，接在插入对象后面
+                new_finish = std::uninitialized_copy(position, _finish, new_finish);
+            }
+            catch (...) {
+                //要么做完，要么一个别做！
+                tinystl::destroy(new_start, new_finish);
+                data_allocator::deallocate(new_start, len);
+                throw;
+            }
+            //至此，新空间准备好了，老空间彻底失去了价值
+            destroy(begin(), end());
+            deallocate();
+            //新的头尾指针干过去
+            _start = new_start;
+            _finish = new_finish;
+            _end_of_storage = new_start + len;
+        }
+    }
 
 }
 
