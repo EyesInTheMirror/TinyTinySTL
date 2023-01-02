@@ -100,6 +100,8 @@ public:
         }
     }
 
+    iterator insert(iterator pos, size_type n, const T& val);
+
     void pop_back() {
         --_finish;
         tinystl::destroy(_finish);
@@ -116,11 +118,16 @@ public:
         return pos;
     }
 
-    //先放一下
+    //始终保证前闭后开的原则
     iterator erase(iterator first, iterator last) {
-        std::copy(last + 1, _finish, first);
-        _finish -= last - first + 1;
-        data_allocator::destroy(_finish, _finish + last - first);
+        //把删除元素区间后面的有效元素移到前面来，覆盖掉删除元素，
+        // 返回复制元素末尾的后一个位置（右体现后开的原则）
+        iterator it = std::copy(last, _finish, first);
+        //细节，虽然不知道it在前还是last在前，但我能确定的是从it开始到finish的一定都不要
+        tinystl::destroy(it, _finish);
+        //删掉多少finish前移多少
+        _finish = _finish - (last - first);
+        //返回删掉元素的后一个位置
         return first;
     }
 
@@ -140,33 +147,56 @@ public:
 };
 
     template<typename T, typename Alloc>
-    void vector<T, Alloc>::insert_aux(vector::iterator position, const T &x) {
-        if(_finish != _end_of_storage) {//这函数不只给push_back用，这里还得判断
-            //在最后一个元素的后一个位置构造一个最后元素
-            tinystl::construct(_finish, *(_finish - 1));
-            ++_finish;
-            //太他妈细节了，必须要确保存储下来的是元素的一个副本,不然以后修改容器里面的值影响容器外面岂不是乱套
-            T x_copy = x;
-            //position后面整体右移
-            std::copy_backward(position, _finish - 2, _finish - 1);
-            *position = x_copy;
+    vector<T, Alloc>::iterator vector<T, Alloc>::insert(vector::iterator pos, vector::size_type n, const T &val) {
+        if(n == 0) return pos;
+        //用来定位插入元素的第一位
+        const difference_type offset = pos - begin();
+        if(static_cast<size_type>(_end_of_storage - _finish) >= n) {
+            //情况1：备用的空间大于待插入元素个数
+            T val_copy = val;
+            //插入位置后面有多少元素
+            const size_type elems_after = _finish - pos;
+            iterator old_finish = _finish;
+            //如果后面的元素比要插入的多，意味着需要构造的只有原来的元素
+            if(elems_after > n) {
+                //空出n个位置，那么后n个需要构造
+                std::uninitialized_copy(_finish - n, _finish, _finish);
+                _finish += n;
+                //把剩下的后移n位，注意第三个参数的含义！！
+                //first, last	-	the range of the elements to copy from
+                //d_last	-	the end of the destination range
+                std::copy_backward(pos, old_finish - n, old_finish);
+                //空出来的填元素就可以了
+                std::fill(pos, pos + n, val_copy);
+            }
+            //如果插入位置后面的元素比插入的少，意味着后面的元素要全部前往未构造区域，同时会有插入元素需要构造
+            else {
+                //想象一下后面元素搬迁后的场景，中间会有一些没构造的区域，先给他干上去一部分插入元素
+                tinystl::uninitialized_fill_n(_finish, n - elems_after, val_copy);
+                _finish += n - elems_after;
+                //随后开始大迁徙
+                std::uninitialized_copy(pos, old_finish, _finish);
+                _finish += elems_after;
+                //最后鸠占鹊巢
+                std::fill(pos, old_finish, val_copy);
+            }
         }
         else {
+            //情况2：备用的空间不够插了
             const size_type old_size = size();
             //如果原空间为0，新空间为1，否则为两倍的原空间
             //注意这里的新空间指的是分配的内存，跟size()没关系
-            const size_type len = old_size != 0 ? 2 * old_size : 1;
+            const size_type len = old_size + std::max(old_size, n);
             iterator new_start = data_allocator::allocate(len);
             iterator new_finish = new_start;
             try {
                 //别忘了uninitialized系列主打的是构造与内存分配的分离～
                 //首先把插入位置之前的对象拷贝到新位置去
-                new_finish = std::uninitialized_copy(_start, position, new_start);
+                new_finish = std::uninitialized_copy(_start, pos, new_start);
                 //构造插入对象
-                tinystl::construct(new_finish, x);
-                ++new_finish;
+                new_finish = uninitialized_fill_n(new_finish, n, val);
                 //继续把插入位置后面的拷贝到新位置去，接在插入对象后面
-                new_finish = std::uninitialized_copy(position, _finish, new_finish);
+                new_finish = std::uninitialized_copy(pos, _finish, new_finish);
             }
             catch (...) {
                 //要么做完，要么一个别做！
@@ -182,8 +212,53 @@ public:
             _finish = new_finish;
             _end_of_storage = new_start + len;
         }
+        return begin() + offset;
     }
 
+template<typename T, typename Alloc>
+void vector<T, Alloc>::insert_aux(vector::iterator position, const T &x) {
+    if(_finish != _end_of_storage) {//这函数不只给push_back用，这里还得判断
+        //在最后一个元素的后一个位置构造一个最后元素
+        tinystl::construct(_finish, *(_finish - 1));
+        ++_finish;
+        //太他妈细节了，必须要确保存储下来的是元素的一个副本,不然以后修改容器里面的值影响容器外面岂不是乱套
+        T x_copy = x;
+        //position后面整体右移
+        std::copy_backward(position, _finish - 2, _finish - 1);
+        *position = x_copy;
+    }
+    else {
+        const size_type old_size = size();
+        //如果原空间为0，新空间为1，否则为两倍的原空间
+        //注意这里的新空间指的是分配的内存，跟size()没关系
+        const size_type len = old_size != 0 ? 2 * old_size : 1;
+        iterator new_start = data_allocator::allocate(len);
+        iterator new_finish = new_start;
+        try {
+            //别忘了uninitialized系列主打的是构造与内存分配的分离～
+            //首先把插入位置之前的对象拷贝到新位置去
+            new_finish = std::uninitialized_copy(_start, position, new_start);
+            //构造插入对象
+            tinystl::construct(new_finish, x);
+            ++new_finish;
+            //继续把插入位置后面的拷贝到新位置去，接在插入对象后面
+            new_finish = std::uninitialized_copy(position, _finish, new_finish);
+        }
+        catch (...) {
+            //要么做完，要么一个别做！
+            tinystl::destroy(new_start, new_finish);
+            data_allocator::deallocate(new_start, len);
+            throw;
+        }
+        //至此，新空间准备好了，老空间彻底失去了价值
+        destroy(begin(), end());
+        deallocate();
+        //新的头尾指针干过去
+        _start = new_start;
+        _finish = new_finish;
+        _end_of_storage = new_start + len;
+    }
+}
 }
 
 #endif //TINYTINYSTL_VECTOR_H
