@@ -104,7 +104,7 @@ public:
 };
 
     template<typename T, typename Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator first, vector::iterator last) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator first, vector::iterator last) {
         //把删除元素区间后面的有效元素移到前面来，覆盖掉删除元素，
         // 返回复制元素末尾的后一个位置（右体现后开的原则）
         iterator it = std::copy(last, _finish, first);
@@ -117,7 +117,7 @@ public:
     }
 
     template<typename T, typename Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator pos) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator pos) {
         if (pos + 1 != end()) {
             //把pos后面的都复制到pos的位置来
             std::copy(pos + 1, _finish, pos);
@@ -140,7 +140,7 @@ public:
     }
 
     template<typename T, typename Alloc>
-    vector<T, Alloc>::iterator vector<T, Alloc>::insert(vector::iterator pos, vector::size_type n, const T &val) {
+    typename vector<T, Alloc>::iterator vector<T, Alloc>::insert(vector::iterator pos, vector::size_type n, const T &val) {
         if(n == 0) return pos;
         //用来定位插入元素的第一位
         const difference_type offset = pos - begin();

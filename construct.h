@@ -45,7 +45,7 @@ namespace tinystl{
     template <typename ForwardIter>
     void destroy_more(ForwardIter first, ForwardIter last, std::false_type){
         for(;first != last; ++first){
-            destroy_one(&*first, false);
+            destroy_one(&*first, std::false_type());
         }
     }
 
