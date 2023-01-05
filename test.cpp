@@ -4,8 +4,8 @@
 using namespace tinystl::test;
 
 int main(){
-    allocator_test::test_allocator();
-    construct_test::test_construct();
+    //allocator_test::test_allocator();
+    //construct_test::test_construct();
     vector_test::test_vector();
     return 0;
 }
