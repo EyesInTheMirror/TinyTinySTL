@@ -7,9 +7,11 @@
 2022.12.28 搭建vector框架  
 2022.12.29 实现uninitialized_fill，并将与内存相关的操作收归到memory.h  
 2023.01.02 完成第一版vector  
+2023.01.03 实现initialized_copy，并整理vector的代码  
+2023.01.06 测试vector功能，复盘写笔记  
+2023.01.07 list结点、迭代器设计
 ## ToDo 
-uninitialized_copy()，替换vector中的实现  
-复盘vector，写笔记  
-## 备忘 
-erase(iterator first, iterator last)、insert()还没定义  
+
+
+## 备忘  
 uninitialized、vector用到了algorithm的fill  
