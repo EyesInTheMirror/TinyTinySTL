@@ -50,8 +50,18 @@ namespace tinystl::test::vector_test {
         //用pop和erase删除元素
         pv.pop_back();
         cout << "after pop: back = " << *(pv.end() - 1) << endl;
+        cout << "before erase: ";
+        for(const auto& n : pv) {
+            cout << n.m_Name << ' ';
+        }
+        cout << endl;
         pv.erase(pv.end() - 2, pv.end() - 1);
         pv.erase(pv.end() - 3);
+        cout << "after erase: ";
+        for(const auto& n : pv) {
+            cout << n.m_Name << ' ';
+        }
+        cout << endl;
 
         //用resize更改容器的大小
         cout << "size = " << pv.size() << ", " << "capacity = " << pv.capacity() << endl;

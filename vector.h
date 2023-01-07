@@ -106,7 +106,7 @@ public:
     template<typename T, typename Alloc>
     typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator first, vector::iterator last) {
         //把删除元素区间后面的有效元素移到前面来，覆盖掉删除元素，
-        // 返回复制元素末尾的后一个位置（右体现后开的原则）
+        // 返回复制元素末尾的后一个位置
         iterator it = std::copy(last, _finish, first);
         //细节，虽然不知道it在前还是last在前，但我能确定的是从it开始到finish的一定都不要
         tinystl::destroy(it, _finish);
@@ -177,7 +177,7 @@ public:
         else {
             //情况2：备用的空间不够插了
             const size_type old_size = size();
-            //如果原空间为0，新空间为1，否则为两倍的原空间
+            //如果需要的新空间比老空间还多，那就需要更大的空间正好装下，否则还是两倍的原空间
             //注意这里的新空间指的是分配的内存，跟size()没关系
             const size_type len = old_size + std::max(old_size, n);
             iterator new_start = data_allocator::allocate(len);
