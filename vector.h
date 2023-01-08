@@ -11,7 +11,7 @@
 #include <algorithm>
 
 namespace tinystl {
-template<typename T, typename Alloc = tinystl::allocator<T> >
+template<typename T>
 class vector {
 public:
     using value_type = T;
@@ -103,8 +103,8 @@ public:
     }
 };
 
-    template<typename T, typename Alloc>
-    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator first, vector::iterator last) {
+    template<typename T>
+    typename vector<T>::iterator vector<T>::erase(vector::iterator first, vector::iterator last) {
         //把删除元素区间后面的有效元素移到前面来，覆盖掉删除元素，
         // 返回复制元素末尾的后一个位置
         iterator it = std::copy(last, _finish, first);
@@ -116,8 +116,8 @@ public:
         return first;
     }
 
-    template<typename T, typename Alloc>
-    typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(vector::iterator pos) {
+    template<typename T>
+    typename vector<T>::iterator vector<T>::erase(vector::iterator pos) {
         if (pos + 1 != end()) {
             //把pos后面的都复制到pos的位置来
             std::copy(pos + 1, _finish, pos);
@@ -128,8 +128,8 @@ public:
         return pos;
     }
 
-    template<typename T, typename Alloc>
-    void vector<T, Alloc>::push_back(const T &val) {
+    template<typename T>
+    void vector<T>::push_back(const T &val) {
         if (_finish != _end_of_storage) {
             tinystl::construct(_finish, val);
             ++_finish;
@@ -139,8 +139,8 @@ public:
         }
     }
 
-    template<typename T, typename Alloc>
-    typename vector<T, Alloc>::iterator vector<T, Alloc>::insert(vector::iterator pos, vector::size_type n, const T &val) {
+    template<typename T>
+    typename vector<T>::iterator vector<T>::insert(vector::iterator pos, vector::size_type n, const T &val) {
         if(n == 0) return pos;
         //用来定位插入元素的第一位
         const difference_type offset = pos - begin();
@@ -208,8 +208,8 @@ public:
         return begin() + offset;
     }
 
-template<typename T, typename Alloc>
-void vector<T, Alloc>::insert_aux(vector::iterator position, const T &x) {
+template<typename T>
+void vector<T>::insert_aux(vector::iterator position, const T &x) {
     if(_finish != _end_of_storage) {//这函数不只给push_back用，这里还得判断
         //在最后一个元素的后一个位置构造一个最后元素
         tinystl::construct(_finish, *(_finish - 1));
