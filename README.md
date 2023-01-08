@@ -9,9 +9,12 @@
 2023.01.02 完成第一版vector  
 2023.01.03 实现initialized_copy，并整理vector的代码  
 2023.01.06 测试vector功能，复盘写笔记  
-2023.01.07 list结点、迭代器设计
+2023.01.07 list结点、迭代器设计  
+2023.01.08 list数据结构，构造函数  
 ## ToDo 
 
 
 ## 备忘  
 uninitialized、vector用到了algorithm的fill  
+list的size别忘了更新  
+list的fill_init不满足commit-rollback语义  
