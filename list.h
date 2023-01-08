@@ -65,11 +65,88 @@ namespace tinystl {
             --*this;
             return tmp;
         }
+
+        bool operator!=(const iterator& rhs) { return this->_node != rhs._node; }
     };
 
-    //list数据结构
+    //list数据结构（环状双向链表）
+    template<typename T>
+    class list {
+    protected:
+        using list_node = list_node<T>;
+        using list_node_allocator = tinystl::allocator<list_node>;
+    public:
+        using link_type = list_node *;
+        using iterator = list_iterator<T>;
+        using size_type = size_t;
+        using value_type = T;
+        using pointer = T *;
+        using reference = T &;
+    protected:
+        link_type _node; //环形链表只需一个指针即可，这个指针指向末端结点（最后一个元素的下一个位置）
+        size_type _size{}; //不想O(n)返回大小，试试优化一波
 
+        //申请一个结点的空间
+        link_type new_node() { return list_node_allocator::allocate(); }
 
+        //释放结点空间
+        void delete_node(link_type p) { list_node_allocator::deallocate(p); }
+
+        //申请并构造一个结点
+        link_type create_node(const T &val) {
+            link_type blank_node = new_node();
+            tinystl::construct(&blank_node->data, val);
+            return blank_node;
+        }
+
+        //析构并释放一个结点
+        void destroy_node(link_type p) {
+            tinystl::destroy(&p->data);
+            delete_node(p);
+        }
+
+        //用于构造函数
+        void fill_initialize(size_type n, const T &val) {
+            _node = new_node();
+            _size = n;
+            _node->next = _node;
+            _node->prev = _node;
+            for (; n > 0; --n) {
+                link_type node = create_node(val);
+                node->next = _node->next;
+                _node->next->prev = node;
+                _node->next = node;
+                node->prev = _node;
+            }
+        }
+
+    public:
+        //默认构造函数，创建一个空表
+        list() { fill_initialize(0, value_type()); }
+
+        explicit list(size_type n) { fill_initialize(n, value_type()); }
+
+        list(size_type n, const T &val) { fill_initialize(n, val); }
+
+        ~list() {
+            clear();
+            list_node_allocator::deallocate(_node);
+            _node = nullptr;
+            _size = 0;
+        }
+        //各种操作
+        iterator begin() { return static_cast<iterator>(_node->next); }
+
+        iterator end() { return static_cast<iterator>(_node); }
+
+        bool empty() { return begin() == end(); }
+
+        [[nodiscard]] size_type size() const { return _size; }
+
+        reference front() { return *begin(); }
+
+        reference back() { return *(--end()); }
+    };
 
 
 }
