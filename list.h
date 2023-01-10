@@ -66,7 +66,8 @@ namespace tinystl {
             return tmp;
         }
 
-        bool operator!=(const iterator& rhs) { return this->_node != rhs._node; }
+        bool operator==(const iterator &rhs) const { return this->_node == rhs._node; }
+        bool operator!=(const iterator &rhs) const { return this->_node != rhs._node; }
     };
 
     //list数据结构（环状双向链表）
@@ -106,17 +107,27 @@ namespace tinystl {
         }
 
         //用于构造函数
-        void fill_initialize(size_type n, const T &val) {
-            _node = new_node();
-            _size = n;
-            _node->next = _node;
-            _node->prev = _node;
-            for (; n > 0; --n) {
-                link_type node = create_node(val);
-                node->next = _node->next;
-                _node->next->prev = node;
-                _node->next = node;
-                node->prev = _node;
+        void fill_initialize(size_type n, const T &val);
+
+        template<typename Iter>
+        void copy_initialize(Iter first, Iter last);
+
+        //内部函数，用于把一个范围内的结点接到pos前面一位（前闭后开）
+        void transfer(iterator pos, iterator first, iterator last) {
+            if (pos != first) {
+                //区间尾结点勾搭上pos
+                last._node->prev->next = pos._node;
+                //区间首结点的前置位宣布单方面终止和first外交，并找上尾结点后置位抱团取暖
+                first._node->prev->next = last._node;
+                link_type tmp = pos._node->prev;
+                //pos回应了区间尾结点
+                pos._node->prev = last._node->prev;
+                //pos的前置位勾搭上区间首结点
+                tmp->next = first._node;
+                //可怜的区间外结点完成联络
+                last._node->prev = first._node->prev;
+                //区间首结点回应pos前置位，至此区间彻底融入pos的前面
+                first._node->prev = tmp;
             }
         }
 
@@ -128,16 +139,20 @@ namespace tinystl {
 
         list(size_type n, const T &val) { fill_initialize(n, val); }
 
+        template<typename Iter>
+        list(Iter first, Iter last) { copy_initialize(first, last); }
+
         ~list() {
             clear();
             list_node_allocator::deallocate(_node);
             _node = nullptr;
             _size = 0;
         }
-        //各种操作
-        iterator begin() { return static_cast<iterator>(_node->next); }
 
-        iterator end() { return static_cast<iterator>(_node); }
+        //各种操作
+        iterator begin() { return iterator(_node->next); }
+
+        iterator end() { return iterator(_node); }
 
         bool empty() { return begin() == end(); }
 
@@ -146,9 +161,182 @@ namespace tinystl {
         reference front() { return *begin(); }
 
         reference back() { return *(--end()); }
+
+        iterator insert(iterator pos, const T &val);
+
+        void push_front(const T &val);
+
+        void push_back(const T &val);
+
+        iterator erase(iterator pos);
+
+        void pop_front();
+
+        void pop_back();
+
+        void clear();
+
+        void remove(const T &val);
+
+        //删除连续的相同元素
+        void unique();
+
+        //list的各种连接操作
+        void splice(iterator pos, list& x);
+        void splice(iterator pos, list&, iterator itr);
+        void splice(iterator pos, list&, iterator first, iterator last);
     };
 
+    template<typename T>
+    void list<T>::splice(list::iterator pos, list &, list::iterator first, list::iterator last) {
+        if(first != last) transfer(pos, first, last);
+    }
 
+    template<typename T>
+    void list<T>::splice(list::iterator pos, list &, list::iterator itr) {
+        iterator tmp = itr;
+        ++tmp;
+        //待插的元素本来位于pos的前一位或者是pos自己的话啥也不做
+        if(pos == itr || pos == tmp) return;
+        transfer(pos, itr, tmp);
+    }
+
+    template<typename T>
+    void list<T>::splice(list::iterator pos, list &x) {
+        if(!x.empty()) transfer(pos, x.begin(), x.end());
+    }
+
+    template<typename T>
+    template<typename Iter>
+    void list<T>::copy_initialize(Iter first, Iter last) {
+        _node = new_node();
+        _node->prev = _node;
+        _node->next = _node;
+        size_type n = tinystl::distance(first, last);
+        _size = n;
+        try {
+            for (; n > 0; --n, ++first) {
+                auto node = create_node(*first);
+                node->next = _node;
+                node->prev = _node->prev;
+                _node->prev = node;
+                node->prev->next = node;
+            }
+        }
+        catch (...) {
+            clear();
+            list_node_allocator::deallocate(_node);
+            _node = nullptr;
+            throw;
+        }
+    }
+
+    template<typename T>
+    void list<T>::unique() {
+        if (_size <= 1) return;
+        link_type cur = _node->next;
+        link_type next = cur->next;
+        while (cur != _node) {
+            if (cur->data == next->data) {
+                next = erase(iterator(next))._node;
+            } else {
+                cur = next;
+                next = next->next;
+            }
+        }
+    }
+
+    template<typename T>
+    void list<T>::remove(const T &val) {
+        link_type cur = _node->next;
+        while (cur != _node) {
+            if (cur->data == val) {
+                cur = erase(iterator(cur))._node;
+            } else cur = cur->next;
+        }
+    }
+
+    template<typename T>
+    void list<T>::clear() {
+        link_type cur = _node->next;
+        while (cur != _node->prev) {
+            link_type tmp = cur;
+            cur = cur->next;
+            destroy_node(tmp);
+        }
+        _size = 0;
+        _node->next = _node;
+        _node->prev = _node;
+    }
+
+    template<typename T>
+    void list<T>::pop_back() {
+        erase(--end());
+    }
+
+    template<typename T>
+    void list<T>::pop_front() {
+        erase(begin());
+    }
+
+    template<typename T>
+    typename list<T>::iterator list<T>::erase(list::iterator pos) {
+        link_type return_node = pos._node->next;
+        pos._node->prev->next = pos._node->next;
+        pos._node->next->prev = pos._node->prev;
+        destroy_node(pos._node);
+        --_size;
+        return iterator(return_node);
+    }
+
+    template<typename T>
+    void list<T>::push_back(const T &val) {
+        insert(end(), val);
+    }
+
+    template<typename T>
+    void list<T>::push_front(const T &val) {
+        insert(begin(), val);
+    }
+
+    template<typename T>
+    void list<T>::fill_initialize(list::size_type n, const T &val) {
+        _node = new_node();
+        _size = n;
+        _node->next = _node;
+        _node->prev = _node;
+        try {
+            for (; n > 0; --n) {
+                link_type node = create_node(val);
+                //这里是前插，不过反正都一样的结点就无所谓了
+                node->next = _node->next;
+                _node->next->prev = node;
+                _node->next = node;
+                node->prev = _node;
+            }
+        }
+        catch (...) {
+            clear();
+            list_node_allocator::deallocate(_node);
+            _node = nullptr;
+            throw;
+        }
+    }
+
+    template<typename T>
+    typename list<T>::iterator list<T>::insert(list::iterator pos, const T &val) {
+        //构造一个结点并且填入内容
+        link_type tmp = create_node(val);
+        //一顿骚操作把tmp结点接到pos的前一个位置（想象不出来过程就画图）
+        tmp->next = pos._node;
+        tmp->prev = pos._node->prev;
+        pos._node->prev->next = tmp;
+        pos._node->prev = tmp;
+
+        ++_size;
+        //返回插入元素，但是不存在空间移动问题，pos迭代器仍然有效
+        return iterator(tmp);
+    }
 }
 
 #endif //TINYTINYSTL_LIST_H
