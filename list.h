@@ -113,23 +113,7 @@ namespace tinystl {
         void copy_initialize(Iter first, Iter last);
 
         //内部函数，用于把一个范围内的结点接到pos前面一位（前闭后开）
-        void transfer(iterator pos, iterator first, iterator last) {
-            if (pos != first) {
-                //区间尾结点勾搭上pos
-                last._node->prev->next = pos._node;
-                //区间首结点的前置位宣布单方面终止和first外交，并找上尾结点后置位抱团取暖
-                first._node->prev->next = last._node;
-                link_type tmp = pos._node->prev;
-                //pos回应了区间尾结点
-                pos._node->prev = last._node->prev;
-                //pos的前置位勾搭上区间首结点
-                tmp->next = first._node;
-                //可怜的区间外结点完成联络
-                last._node->prev = first._node->prev;
-                //区间首结点回应pos前置位，至此区间彻底融入pos的前面
-                first._node->prev = tmp;
-            }
-        }
+        void transfer(iterator pos, iterator first, iterator last);
 
     public:
         //默认构造函数，创建一个空表
@@ -183,27 +167,132 @@ namespace tinystl {
 
         //list的各种连接操作
         void splice(iterator pos, list& x);
-        void splice(iterator pos, list&, iterator itr);
-        void splice(iterator pos, list&, iterator first, iterator last);
+        void splice(iterator pos, list& x, iterator itr);
+        void splice(iterator pos, list& x, iterator first, iterator last);
+
+        void merge(list& x);
+
+        void reverse();
+
+        void swap(list& x);
+
+        void sort();
     };
 
     template<typename T>
-    void list<T>::splice(list::iterator pos, list &, list::iterator first, list::iterator last) {
-        if(first != last) transfer(pos, first, last);
+    void list<T>::swap(list &x) {
+        std::swap(_node, x._node);
+        std::swap(_size, x._size);
     }
 
     template<typename T>
-    void list<T>::splice(list::iterator pos, list &, list::iterator itr) {
+    void list<T>::sort() {
+        if(_size == 0 || _size == 1) return;
+
+        list<T> carry;
+        list<T> counter[64];
+        int fill = 0;
+        while(!empty()) {
+            carry.splice(carry.begin(), *this, begin());
+            int i = 0;
+            while(i < fill && !counter[i].empty()) {
+                counter[i].merge(carry);
+                carry.swap(counter[i++]);
+            }
+            carry.swap(counter[i]);
+            if(i == fill) ++fill;
+        }
+        for(int i = 1; i < fill; ++i) {
+            counter[i].merge(counter[i - 1]);
+        }
+        swap(counter[fill - 1]);
+    }
+
+    template<typename T>
+    void list<T>::reverse() {
+        if(_size == 0 || _size == 1) return;
+        iterator cur = begin();
+        ++cur;
+        while(cur != end()) {
+            iterator pre = cur;
+            ++cur;
+            transfer(begin(), pre, cur);
+        }
+    }
+
+    template<typename T>
+    void list<T>::merge(list &x) {
+        //前排提醒：两个链表都必须有序
+        iterator first1 = begin();
+        iterator last1 = end();
+        iterator first2 = x.begin();
+        iterator last2 = x.end();
+        size_type n = x._size;
+
+        while(first1 != last1 && first2 != last2) {
+            if(*first2 < *first1) {
+                iterator next = first2;
+                transfer(first1, first2, ++next);
+                first2 = next;
+            }
+            else ++first1;
+        }
+        //如果到了最后2还没接到1上面去，那么把2剩下的全部接到1尾部
+        if(first2 != last2) {
+            transfer(last1, first2, last2);
+        }
+        _size += n;
+        x._size = 0;
+    }
+
+    template<typename T>
+    void list<T>::transfer(list::iterator pos, list::iterator first, list::iterator last) {
+        //前排提醒：前闭后开
+        if (pos != first) {
+            //区间尾结点勾搭上pos
+            last._node->prev->next = pos._node;
+            //区间首结点的前置位宣布单方面终止和first外交，并找上尾结点后置位抱团取暖
+            first._node->prev->next = last._node;
+            link_type tmp = pos._node->prev;
+            //pos回应了区间尾结点
+            pos._node->prev = last._node->prev;
+            //pos的前置位勾搭上区间首结点
+            tmp->next = first._node;
+            //可怜的区间外结点完成联络
+            last._node->prev = first._node->prev;
+            //区间首结点回应pos前置位，至此区间彻底融入pos的前面
+            first._node->prev = tmp;
+        }
+    }
+
+    template<typename T>
+    void list<T>::splice(list::iterator pos, list &x, list::iterator first, list::iterator last) {
+        if(first != last) {
+            size_type n = distance(first, last);
+            transfer(pos, first, last);
+            _size += n;
+            x._size -= n;
+        }
+    }
+
+    template<typename T>
+    void list<T>::splice(list::iterator pos, list &x, list::iterator itr) {
         iterator tmp = itr;
         ++tmp;
         //待插的元素本来位于pos的前一位或者是pos自己的话啥也不做
         if(pos == itr || pos == tmp) return;
         transfer(pos, itr, tmp);
+        ++_size;
+        --x._size;
     }
 
     template<typename T>
     void list<T>::splice(list::iterator pos, list &x) {
-        if(!x.empty()) transfer(pos, x.begin(), x.end());
+        if(!x.empty()) {
+            transfer(pos, x.begin(), x.end());
+            _size += x._size;
+            x._size = 0;
+        }
     }
 
     template<typename T>

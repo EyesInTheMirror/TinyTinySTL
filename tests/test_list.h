@@ -25,7 +25,21 @@ namespace tinystl::test::list_test {
         *(l2.begin()) = 10;
         print_list(l2);
         auto itr = std::find(l2.begin(), l2.end(), 99);
+
         l2.splice(itr, l);
+        print_list(l2);
+        l2.reverse();
+        print_list(l2);
+        cout << "------------------" << endl;
+        l2.swap(l);
+        print_list(l);
+        print_list(l2);
+        l2.swap(l);
+        print_list(l);
+        print_list(l2);
+        cout << "------------------" << endl;
+        l2.pop_front();
+        l2.sort();
         print_list(l2);
     }
 }
