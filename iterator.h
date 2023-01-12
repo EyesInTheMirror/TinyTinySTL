@@ -5,6 +5,7 @@
 #ifndef TINYTINYSTL_ITERATOR_H
 #define TINYTINYSTL_ITERATOR_H
 #include <cstddef>
+
 namespace tinystl{
     //迭代器的category设计
     struct input_iterator_tag {};
@@ -25,14 +26,52 @@ namespace tinystl{
     };
 
     //迭代器类别萃取器
+//    template <typename Iterator>
+//    struct iterator_traits{
+//        using iterator_category = typename Iterator::iterator_category;
+//        using value_type = typename Iterator::value_type;
+//        using pointer = typename Iterator::pointer;
+//        using reference = typename Iterator::reference;
+//        using difference_type = typename Iterator::difference_type;
+//    };
+    template <class T>
+    struct has_iterator_cat
+    {
+    private:
+        struct two { char a; char b; };
+        template <class U> static two test(...);
+        template <class U> static char test(typename U::iterator_category* = 0);
+        // 运用了SFINAE技巧，若有iterator_category属性，则会优先匹配到
+    public:
+        static const bool value = sizeof(test<T>(0)) == sizeof(char);
+    };
+
+    template <typename Iterator, bool>
+    struct iterator_traits_impl {};
+
     template <typename Iterator>
-    struct iterator_traits{
+    struct iterator_traits_impl<Iterator, true>{
         using iterator_category = typename Iterator::iterator_category;
         using value_type = typename Iterator::value_type;
         using pointer = typename Iterator::pointer;
         using reference = typename Iterator::reference;
         using difference_type = typename Iterator::difference_type;
     };
+
+    template <typename Iterator, bool>
+    struct iterator_traits_helper {};
+
+    template <typename Iterator>
+    struct iterator_traits_helper<Iterator, true>
+            : public iterator_traits_impl<Iterator,
+            std::is_convertible<typename Iterator::iterator_catecory, input_iterator_tag>::value ||
+            std::is_convertible<typename Iterator::iterator_catecory, output_iterator_tag>::value>
+    {};
+    template <typename Iterator>
+    struct iterator_traits
+        : public iterator_traits_helper<Iterator, has_iterator_cat<Iterator>::value>
+        {};
+
     //对于原始指针的偏特化版本
     template <typename T>
     struct iterator_traits<T*>{
@@ -121,6 +160,35 @@ namespace tinystl{
     inline void advance(InputIterator& cur, Distance n){
         _advance(cur, n, iterator_category(cur));
     }
+
+
+
+
+    template <class T, T v>
+    struct m_integral_constant
+    {
+        static constexpr T value = v;
+    };
+
+    template <bool b>
+    using m_bool_constant = m_integral_constant<bool, b>;
+
+    typedef m_bool_constant<true>  m_true_type;
+    typedef m_bool_constant<false> m_false_type;
+
+
+    template <class T, class U, bool = has_iterator_cat<iterator_traits<T>>::value>
+    struct has_iterator_cat_of
+            : public m_bool_constant<std::is_convertible<
+                    typename iterator_traits<T>::iterator_category, U>::value>
+    {
+    };
+
+    template <class T, class U>
+    struct has_iterator_cat_of<T, U, false> : public m_false_type {};
+
+    template <class Iter>
+    struct is_input_iterator : public has_iterator_cat_of<Iter, input_iterator_tag> {};
 }
 
 #endif //TINYTINYSTL_ITERATOR_H
