@@ -123,7 +123,8 @@ namespace tinystl {
 
         list(size_type n, const T &val) { fill_initialize(n, val); }
 
-        template<typename Iter>
+        template<typename Iter, typename std::enable_if<
+                tinystl::is_input_iterator<Iter>::value, int>::type = 0>
         list(Iter first, Iter last) { copy_initialize(first, last); }
 
         ~list() {
