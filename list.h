@@ -83,7 +83,7 @@ namespace tinystl {
         using value_type = T;
         using pointer = T *;
         using reference = T &;
-    protected:
+    private:
         link_type _node; //环形链表只需一个指针即可，这个指针指向末端结点（最后一个元素的下一个位置）
         size_type _size{}; //不想O(n)返回大小，试试优化一波
 
@@ -317,6 +317,7 @@ namespace tinystl {
             clear();
             list_node_allocator::deallocate(_node);
             _node = nullptr;
+            _size = 0;
             throw;
         }
     }
@@ -392,9 +393,9 @@ namespace tinystl {
     template<typename T>
     void list<T>::fill_initialize(list::size_type n, const T &val) {
         _node = new_node();
-        _size = n;
         _node->next = _node;
         _node->prev = _node;
+        _size = n;
         try {
             for (; n > 0; --n) {
                 link_type node = create_node(val);
@@ -409,6 +410,7 @@ namespace tinystl {
             clear();
             list_node_allocator::deallocate(_node);
             _node = nullptr;
+            _size = 0;
             throw;
         }
     }
