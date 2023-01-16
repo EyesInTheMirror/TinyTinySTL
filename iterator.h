@@ -15,8 +15,8 @@ namespace tinystl{
     struct random_access_iterator_tag : public bidirection_iterator_tag{};
 
     //迭代器设计模版，确保每一个新设计的迭代器都继承它
-    template <typename Category, typename T,
-            typename Distance = ptrdiff_t , typename Pointer = T*, typename Reference = T&>
+    template <typename Category, typename T, typename Distance = ptrdiff_t ,
+            typename Pointer = T*, typename Reference = T&>
     struct iterator{
         using iterator_category = Category;
         using value_type = T;

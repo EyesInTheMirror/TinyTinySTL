@@ -6,6 +6,7 @@
 #define TINYTINYSTL_LIST_H
 
 #include "iterator.h"
+#include "memory.h"
 
 namespace tinystl {
     //双向链表节点的数据结构

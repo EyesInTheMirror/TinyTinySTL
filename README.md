@@ -12,11 +12,12 @@
 2023.01.07 list结点、迭代器设计  
 2023.01.08 list数据结构，构造函数  
 2023.01.11 完成第一版list  
+2023.01.13 测试list功能，复盘写笔记  
+2023.01.16 deque知识学习，迭代器设计  
 
 ## ToDo 
 
 
 ## 备忘  
-uninitialized、vector用到了algorithm的fill  
-list的size别忘了更新  
+很多std::后面学到了能替换
 list的fill_init不满足commit-rollback语义  
