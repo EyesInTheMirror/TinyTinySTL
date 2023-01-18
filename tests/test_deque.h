@@ -8,7 +8,13 @@
 
 namespace tinystl::test::deque_test {
     void test_deque() {
-
+        deque<int> dq(10000, 5);
+        deque<int> dq2(3, 4);
+        dq2[0] = 99;
+        for(auto n : dq2) {
+            std::cout << n << ' ';
+        }
+        std::cout << std::endl;
     }
 }
 #endif //TINYTINYSTL_TEST_DEQUE_H
