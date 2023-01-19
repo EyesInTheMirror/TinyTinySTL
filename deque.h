@@ -52,6 +52,7 @@ namespace tinystl {
             ++cur;
             if (cur == last) {
                 set_node(node + 1);
+                cur = first;
             }
             return *this;
         }
