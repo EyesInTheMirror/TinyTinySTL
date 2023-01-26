@@ -158,7 +158,7 @@ namespace tinystl {
         { fill_initialize(0, value_type());}
         ~deque() {
             if(_map != nullptr) {
-                //clear();
+                clear();
                 data_allocator::deallocate(*_start.node, buffer_size);
                 *_start.node = nullptr;
                 map_allocator::deallocate(_map, map_size);
@@ -166,13 +166,13 @@ namespace tinystl {
             }
         }
 
-        iterator begin() { return _start;}
-        iterator end() { return _finish;}
+        iterator begin() const { return _start;}
+        iterator end() const { return _finish;}
 
         reference front() { return *_start;}
-        iterator back() { return *(_finish - 1);}
+        reference back() { return *(_finish - 1);}
 
-        size_type size() { return _finish - _start;}
+        [[nodiscard]] size_type size() const { return _finish - _start;}
         size_type max_size() { return static_cast<size_type>(-1);}
 
         bool empty() { return _start == _finish;}
@@ -182,19 +182,7 @@ namespace tinystl {
         void push_back(const value_type& val);
         void push_front(const value_type& val);
 
-        iterator insert(iterator pos, const value_type& val) {
-            if(pos.cur == _start.cur) {
-                push_front(val);
-                return _start;
-            }
-            else if(pos.cur == _finish.cur){
-                push_back(val);
-                return _finish - 1;
-            }
-            else {
-                return insert_aux(pos, val);
-            }
-        }
+        iterator insert(iterator pos, const value_type& val);
 
         void pop_front();
         void pop_back();
@@ -206,7 +194,22 @@ namespace tinystl {
     };
 
     template<typename T>
-    deque<T>::iterator deque<T>::insert_aux(deque::iterator pos, const value_type &val) {
+    deque::iterator deque<T>::insert(deque::iterator pos, const value_type &val) {
+        if(pos.cur == _start.cur) {
+            push_front(val);
+            return _start;
+        }
+        else if(pos.cur == _finish.cur){
+            push_back(val);
+            return _finish - 1;
+        }
+        else {
+            return insert_aux(pos, val);
+        }
+    }
+
+    template<typename T>
+    typename deque<T>::iterator deque<T>::insert_aux(deque::iterator pos, const value_type &val) {
         difference_type index = pos - _start;
         value_type x_copy = val;
         if(index < (size() >> 1)) { //离前面近，那就前面整体前移空位置出来
@@ -234,7 +237,7 @@ namespace tinystl {
     }
 
     template<typename T>
-    deque<T>::iterator deque<T>::erase(deque::iterator first, deque::iterator last) {
+    typename deque<T>::iterator deque<T>::erase(deque::iterator first, deque::iterator last) {
         if(first == _start && last == _finish) {
             clear();
             return _finish;
@@ -267,7 +270,7 @@ namespace tinystl {
     }
 
     template<typename T>
-    deque<T>::iterator deque<T>::erase(deque::iterator pos) {
+    typename deque<T>::iterator deque<T>::erase(deque::iterator pos) {
         iterator next = pos;
         ++next;
         difference_type index = pos - _start; //删除位置相对第一个元素的距离
@@ -437,7 +440,7 @@ namespace tinystl {
         }
         _start.set_node(new_n_start);
         _finish.set_node(new_n_start + old_buf_num - 1);
-        //时刻谨记这个函数仅仅根据即将加入的buf数量配置新map，还没轮到新缓冲区的加入过程
+        //这个函数仅仅根据即将加入的buf数量配置新map，还没轮到新缓冲区的加入过程
     }
 
     template<typename T>
