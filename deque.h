@@ -194,7 +194,7 @@ namespace tinystl {
     };
 
     template<typename T>
-    deque::iterator deque<T>::insert(deque::iterator pos, const value_type &val) {
+    typename deque<T>::iterator deque<T>::insert(deque::iterator pos, const value_type &val) {
         if(pos.cur == _start.cur) {
             push_front(val);
             return _start;
