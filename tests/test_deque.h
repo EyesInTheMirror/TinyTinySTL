@@ -35,6 +35,7 @@ namespace tinystl::test::deque_test {
         //插入
         dq2.push_back(100);
         dq2.push_front(8);
+        dq2.insert(tmp, -1);
         print_deque(dq2);
         auto itr = std::find(dq2.begin(), dq2.end(), 99);
         std::cout << *itr << std::endl;
