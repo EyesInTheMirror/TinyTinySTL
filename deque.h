@@ -125,6 +125,7 @@ namespace tinystl {
         using value_type = T;
         using pointer = T *;
         using reference = T &;
+        using const_reference = const T&;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
         using iterator = deque_iterator<T, T&, T*>;
@@ -175,7 +176,7 @@ namespace tinystl {
         [[nodiscard]] size_type size() const { return _finish - _start;}
         size_type max_size() { return static_cast<size_type>(-1);}
 
-        bool empty() { return _start == _finish;}
+        [[nodiscard]] bool empty() const { return _start == _finish;}
 
         reference operator[](size_type n) {return *(_start + n);}
 
